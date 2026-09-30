@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deriv Market Scanner</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #07111f;
+      color: #ffffff;
+      min-height: 100vh;
+    }
+
+    .header {
+      padding: 24px 18px;
+      background: #0d1b2d;
+      border-bottom: 1px solid #26384d;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: #9fb0c5;
+      font-size: 13px;
+    }
+
+    .status {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #10263a;
+      border: 1px solid #24465f;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f0a500;
+      box-shadow: 0 0 10px #f0a500;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .contracts {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 14px 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #172b42;
+      color: #ffffff;
+      border: 1px solid #2b4560;
+    }
+
+    button.active {
+      background: #d92d46;
+      border-color: #ff526b;
+    }
+
+    .panel {
+      margin-top: 20px;
+      background: #0d1b2d;
+      border: 1px solid #26384d;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .scan-button {
+      background: #d92d46;
+      border-color: #ff526b;
+      padding: 12px 18px;
+    }
+
+    .market {
+      margin-top: 12px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #10263a;
+      border: 1px solid #263f55;
+    }
+
+    .market-name {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .market-status {
+      margin-top: 5px;
+      color: #8fa4bb;
+      font-size: 12px;
+    }
+
+    .signal {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #122f28;
+      border: 1px solid #1d604d;
+      color: #70e0b2;
+      font-weight: 700;
+    }
+
+    .no-signal {
+      background: #2a2021;
+      border-color: #60403f;
+      color: #e5a4a4;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #70849a;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="brand">DERIV MARKET SCANNER</div>
+    <div class="subtitle">
+      Real-time market-condition analysis
+    </div>
+
+    <div class="status">
+      <span class="dot"></span>
+      <span id="connectionStatus">INITIALIZING SCANNER...</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <div class="section-title">
+      WHAT DO YOU WANT TO SCAN?
+    </div>
+
+    <div class="contracts">
+      <button class="active" data-type="overunder">
+        OVER / UNDER
+      </button>
+
+      <button data-type="risefall">
+        RISE / FALL
+      </button>
+
+      <button data-type="evenodd">
+        EVEN / ODD
+      </button>
+
+      <button data-type="matchdiff">
+        MATCH / DIFFER
+      </button>
+
+      <button data-type="digit">
+        DIGIT
+      </button>
+
+      <button data-type="multiplier">
+        MULTIPLIER
+      </button>
+    </div>
+
+    <section class="panel">
+
+      <div class="panel-header">
+        <div class="panel-title" id="scanTitle">
+          OVER / UNDER SCANNER
+        </div>
+
+        <button class="scan-button" id="scanButton">
+          SCAN
+        </button>
+      </div>
+
+      <div id="results">
+
+        <div class="market">
+          <div class="market-name">
+            Waiting for live market data...
+          </div>
+
+          <div class="market-status">
+            Scanner will display real conditions here.
+          </div>
+
+          <div class="signal no-signal">
+            NO SIGNAL YET
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    Scanner only — no trading or automatic contract execution.
+  </footer>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-type]");
+    const scanTitle = document.getElementById("scanTitle");
+    const scanButton = document.getElementById("scanButton");
+    const results = document.getElementById("results");
+    const connectionStatus =
+      document.getElementById("connectionStatus");
+
+    let selectedType = "overunder";
+
+    const titles = {
+      overunder: "OVER / UNDER SCANNER",
+      risefall: "RISE / FALL SCANNER",
+      evenodd: "EVEN / ODD SCANNER",
+      matchdiff: "MATCH / DIFFER SCANNER",
+      digit: "DIGIT SCANNER",
+      multiplier: "MULTIPLIER SCANNER"
+    };
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+
+        buttons.forEach(b => b.classList.remove("active"));
+
+        button.classList.add("active");
+
+        selectedType = button.dataset.type;
+
+        scanTitle.textContent = titles[selectedType];
+
+        results.innerHTML = `
+          <div class="market">
+            <div class="market-name">
+              ${titles[selectedType]}
+            </div>
+
+            <div class="market-status">
+              Waiting for live market data...
+            </div>
+
+            <div class="signal no-signal">
+              NO SIGNAL YET
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    scanButton.addEventListener("click", () => {
+
+      results.innerHTML = `
+        <div class="market">
+          <div class="market-name">
+            Scanner initialized
+          </div>
+
+          <div class="market-status">
+            Contract type:
+            ${titles[selectedType]}
+          </div>
+
+          <div class="signal no-signal">
+            WAITING FOR VERIFIED LIVE DATA
+          </div>
+        </div>
+      `;
+    });
+
+    /*
+      LIVE DERIV CONNECTION WILL BE ADDED
+      AFTER THIS BASIC WEBSITE IS DEPLOYED.
+
+      We deliberately do not fake signals.
+      Real market data must come from the
+      verified Deriv WebSocket connection.
+    */
+
+    connectionStatus.textContent =
+      "WEBSITE READY — LIVE CONNECTION COMING NEXT";
+  </script>
+
+</body>
+</html>
