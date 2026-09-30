@@ -313,17 +313,55 @@
       `;
     });
 
-    /*
-      LIVE DERIV CONNECTION WILL BE ADDED
-      AFTER THIS BASIC WEBSITE IS DEPLOYED.
+ // LIVE DERIV MARKET CONNECTION
+const derivWS = new WebSocket(
+  "wss://api.derivws.com/trading/v1/options/ws/public"
+);
 
-      We deliberately do not fake signals.
-      Real market data must come from the
-      verified Deriv WebSocket connection.
-    */
+derivWS.onopen = () => {
+  connectionStatus.textContent = "LIVE CONNECTION — CONNECTED";
 
-    connectionStatus.textContent =
-      "WEBSITE READY — LIVE CONNECTION COMING NEXT";
+  derivWS.send(JSON.stringify({
+    ticks: "1HZ100V",
+    subscribe: 1,
+    req_id: 1
+  }));
+};
+
+derivWS.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  if (data.msg_type === "tick" && data.tick) {
+    const price = data.tick.quote;
+
+    connectionStatus.textContent = "LIVE CONNECTION — RECEIVING DATA";
+
+    const marketName = document.querySelector(".market-name");
+    const marketStatus = document.querySelector(".market-status");
+    const signal = document.querySelector(".signal");
+
+    if (marketName) {
+      marketName.textContent = "Volatility 100 Index";
+    }
+
+    if (marketStatus) {
+      marketStatus.textContent =
+        "LIVE PRICE: " + price;
+    }
+
+    if (signal) {
+      signal.textContent = "LIVE DATA RECEIVED";
+    }
+  }
+};
+
+derivWS.onerror = () => {
+  connectionStatus.textContent = "CONNECTION ERROR";
+};
+
+derivWS.onclose = () => {
+  connectionStatus.textContent = "CONNECTION CLOSED";
+};
   </script>
 
 </body>
