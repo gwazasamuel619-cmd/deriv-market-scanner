@@ -319,10 +319,12 @@ const liveWS = new WebSocket(
 );
 
 const liveStatus = document.getElementById("connectionStatus");
-const liveSignal = document.querySelector(".signal");
-const liveMarketStatus = document.querySelector(".market-status");
+let liveSignal = null;
+let liveMarketStatus = null;
 
-liveWS.onopen = () => {
+liveWS.onopen = () => { 
+ liveSignal = document.querySelector(".signal");
+  liveMarketStatus = document.querySelector(".market-status");
   if (liveStatus) {
     liveStatus.textContent = "LIVE CONNECTION — RECEIVING DATA";
   }
