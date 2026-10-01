@@ -313,54 +313,76 @@
       `;
     });
 
- // LIVE DERIV MARKET CONNECTION
-const derivWS = new WebSocket(
+// LIVE DERIV MARKET CONNECTION
+const liveWS = new WebSocket(
   "wss://api.derivws.com/trading/v1/options/ws/public"
 );
 
-derivWS.onopen = () => {
-  connectionStatus.textContent = "LIVE CONNECTION — CONNECTED";
+const liveStatus = document.getElementById("connectionStatus");
+const liveSignal = document.querySelector(".signal");
+const liveMarketStatus = document.querySelector(".market-status");
 
-  derivWS.send(JSON.stringify({
+liveWS.onopen = () => {
+  if (liveStatus) {
+    liveStatus.textContent = "LIVE CONNECTION — RECEIVING DATA";
+  }
+
+  if (liveSignal) {
+    liveSignal.textContent = "CONNECTING TO VERIFIED LIVE DATA...";
+  }
+
+  liveWS.send(JSON.stringify({
     ticks: "1HZ100V",
     subscribe: 1,
     req_id: 1
   }));
 };
 
-derivWS.onmessage = (event) => {
+liveWS.onmessage = (event) => {
   const data = JSON.parse(event.data);
+
+  if (data.error) {
+    if (liveSignal) {
+      liveSignal.textContent =
+        "LIVE DATA ERROR: " + data.error.message;
+    }
+    return;
+  }
 
   if (data.msg_type === "tick" && data.tick) {
     const price = data.tick.quote;
 
-    connectionStatus.textContent = "LIVE CONNECTION — RECEIVING DATA";
-
-    const marketName = document.querySelector(".market-name");
-    const marketStatus = document.querySelector(".market-status");
-    const signal = document.querySelector(".signal");
-
-    if (marketName) {
-      marketName.textContent = "Volatility 100 Index";
+    if (liveStatus) {
+      liveStatus.textContent =
+        "LIVE CONNECTION — RECEIVING DATA";
     }
 
-    if (marketStatus) {
-      marketStatus.textContent =
+    if (liveMarketStatus) {
+      liveMarketStatus.textContent =
         "LIVE PRICE: " + price;
     }
 
-    if (signal) {
-      signal.textContent = "LIVE DATA RECEIVED";
+    if (liveSignal) {
+      liveSignal.textContent = "LIVE DATA RECEIVED";
+      liveSignal.classList.remove("no-signal");
     }
   }
 };
 
-derivWS.onerror = () => {
-  connectionStatus.textContent = "CONNECTION ERROR";
+liveWS.onerror = () => {
+  if (liveStatus) {
+    liveStatus.textContent = "CONNECTION ERROR";
+  }
+
+  if (liveSignal) {
+    liveSignal.textContent = "LIVE DATA CONNECTION ERROR";
+  }
 };
 
-derivWS.onclose = () => {
-  connectionStatus.textContent = "CONNECTION CLOSED";
+liveWS.onclose = () => {
+  if (liveStatus) {
+    liveStatus.textContent = "CONNECTION CLOSED";
+  }
 };
   </script>
 
